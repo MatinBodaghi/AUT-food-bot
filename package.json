@@ -1,0 +1,24 @@
+{
+  "name": "aut-food-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal Telegram bot for food.aut.ac.ir, running on Cloudflare Workers",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit && vitest run",
+    "test": "vitest run",
+    "types": "wrangler types",
+    "logs": "wrangler tail"
+  },
+  "devDependencies": {
+    "@grammyjs/types": "^5.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0",
+    "wrangler": "^3.90.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
