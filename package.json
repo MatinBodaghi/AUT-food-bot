@@ -1,19 +1,46 @@
 {
-  "name": "aut-food-bot",
-  "version": "1.0.0",
+  "name": "AUT-food-bot",
+  "version": "0.1.0",
   "private": true,
-  "description": "Personal Telegram bot for food.aut.ac.ir, running on Cloudflare Workers",
+  "description": "AUT-food-bot — Telegram bot for the Amirkabir University of Technology food system (food.aut.ac.ir), running on Cloudflare Workers",
+  "license": "MIT",
+  "author": "Matin Bodaghi (https://github.com/MatinBodaghi)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatinBodaghi/AUT-food-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MatinBodaghi/AUT-food-bot/issues"
+  },
+  "homepage": "https://github.com/MatinBodaghi/AUT-food-bot#readme",
+  "keywords": [
+    "telegram-bot",
+    "cloudflare-workers",
+    "typescript",
+    "aut",
+    "amirkabir",
+    "food",
+    "university",
+    "persian"
+  ],
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "tsc --noEmit && vitest run",
-    "test": "vitest run",
+    "logs": "wrangler tail",
     "types": "wrangler types",
-    "logs": "wrangler tail"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm test",
+    "smoke:login": "tsx tools/test-client.mjs",
+    "inspect": "node tools/inspect.mjs"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@grammyjs/types": "^5.0.0",
+    "playwright-core": "^1.64.1",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
     "wrangler": "^3.90.0"

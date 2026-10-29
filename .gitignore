@@ -1,9 +1,33 @@
+# Dependencies
 node_modules/
+
+# Build output
+dist/
 .wrangler/
+
+# Local secrets
 .dev.vars
+.dev.vars.*
+!.dev.vars.example
 .env
+.env.*
+!.env.example
+
+# Local captures and research data (may contain credentials)
 data/
+
+# Test output
+coverage/
+
+# Editors and OS
 .idea/
 .vscode/
-dist/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Wrangler / installer state
 .installer-state.json

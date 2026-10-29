@@ -1,0 +1,19 @@
+# Copy this file to .dev.vars and fill in your own values.
+# .dev.vars is gitignored. Never commit real credentials.
+
+# AUT CAS credentials (used by `npm run smoke:login`)
+AUT_USERNAME=your_student_id
+AUT_PASSWORD=your_password
+
+# Telegram bot token from @BotFather
+TELEGRAM_BOT_TOKEN=123456789:replace_me
+
+# Base64-encoded 32-byte key for AES-GCM (generate with:
+# node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))")
+TOKEN_KEY=replace_with_base64_32_byte_key
+
+# Planned: secret token used to authenticate Telegram webhook requests
+WEBHOOK_SECRET=replace_with_a_random_string
+
+# Planned: comma-separated Telegram user IDs allowed to use the bot
+ALLOWED_TELEGRAM_IDS=

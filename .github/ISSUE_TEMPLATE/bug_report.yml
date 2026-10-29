@@ -1,0 +1,97 @@
+name: Bug report
+description: Report something that is broken or behaves unexpectedly.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please search existing issues first.
+
+        **Do not include passwords, bot tokens, cookies, CAS tickets, or captured network traffic.** Redact secrets from logs before submitting.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checklist
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I read the README and relevant docs.
+          required: true
+        - label: This is not a security vulnerability (those are reported privately).
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: When I run ..., the bot ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can a maintainer reproduce the problem?
+      placeholder: |
+        1. Run `npm run ...`
+        2. Send `/...` to the bot
+        3. See the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: I expected ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - AUT client / CAS login
+        - Menu or reservation parsing
+        - Telegram bot / commands
+        - Persian formatting / dates
+        - Crypto / secrets
+        - Tooling / CI
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The release tag or commit hash you are running.
+      placeholder: v0.1.0 or a8b544c
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node.js version, operating system, and whether you run locally or on Cloudflare.
+      placeholder: Node 20.11, Windows 11, local Wrangler
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste logs with all secrets redacted.
+      render: shell
+
+  - type: checkboxes
+    id: secrets
+    attributes:
+      label: Secret check
+      options:
+        - label: I confirm this report contains no credentials, tokens, cookies, or service tickets.
+          required: true
