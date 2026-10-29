@@ -10,7 +10,7 @@ An open-source, self-hosted Telegram bot for the food reservation system of **Am
 
 **English** | [فارسی](#فارسی)
 
-> **Status: early development (`v0.1.0`).** The AUT client, Telegram API wrapper, Persian formatting helpers, and crypto utilities are implemented. The menu parser, bot router, scheduler, and automatic reservation are still in progress. See [Project status](#project-status).
+> **Status: early development (`v0.1.0`).** The AUT client, Telegram API wrapper, Persian formatting helpers, crypto utilities, Cloudflare Worker entry point, D1 storage, login flow, and HTML menu parser are implemented. Reservations, reminders, and automatic reservation are still in progress. See [Project status](#project-status).
 
 ## Why?
 
@@ -31,10 +31,10 @@ AUT students must reserve meals before a deadline (currently around 48 hours bef
 | Persian digits, HTML escaping, Jalali date formatting | ✅ Implemented |
 | AES-GCM encryption for secrets at rest | ✅ Implemented |
 | Local network inspector (Playwright) | ✅ Implemented |
-| HTML menu parser | 🚧 Planned |
-| Telegram bot router and conversation handlers | 🚧 Planned |
-| Cloudflare Worker entry point + webhook | 🚧 Planned |
-| Balance and transaction history | 🚧 Planned |
+| HTML menu parser (menu, credit, reservation state) | ✅ Implemented |
+| Telegram bot router (`/login`, `/menu`, `/logout`) | ✅ Implemented |
+| Cloudflare Worker entry point + webhook | ✅ Implemented |
+| Balance and transaction history | 🚧 Balance is shown in `/menu`; history planned |
 | Scheduled deadline reminders (Cron Triggers) | 🚧 Planned |
 | Automatic reservation / cancellation | 🚧 Planned |
 
@@ -48,12 +48,15 @@ This repository is in **early development**. The current code is a working found
 src/
   food/          AUT client: CAS login, cookie jar, restaurant and reserve-page requests
   telegram/      Telegram Bot API wrapper and Persian UI formatting
-  bot/           Bot router and handlers (planned)
+  bot/           Telegram router, /login and /menu handlers
   crypto.ts      AES-GCM encryption, SHA-256 hashing, timing-safe comparison
-tools/           Local network inspector and CAS login smoke test
-test/            Unit tests (Vitest)
+  store.ts       D1 access (encrypted password and session cookie)
+  index.ts       Worker entry point (Telegram webhook)
+tools/           Local network inspector, login smoke test, webhook setup
+test/            Unit tests (Vitest) and fixtures
 docs/            Architecture and reverse-engineered API notes
 data/captured/   Local-only network captures (gitignored, may contain secrets)
+migrations/      D1 schema (append-only)
 ```
 
 Planned request flow:
@@ -156,11 +159,12 @@ The internal endpoints were discovered with `npm run inspect`; they are document
 - [x] Secret encryption helpers
 - [x] Network inspector and login smoke test
 - [x] Type-checking and unit-test CI
-- [ ] HTML menu parser (`DayMenu` / `Meal`)
-- [ ] Bot router with commands and inline keyboards
-- [ ] Cloudflare Worker entry point and webhook authentication
-- [ ] Persistent storage for users, preferences, and sessions
+- [x] HTML menu parser (`ReservePage` / `DayMenu` / `MealOption`)
+- [x] Bot router with commands and inline keyboards
+- [x] Cloudflare Worker entry point and webhook authentication
+- [x] Persistent storage for the encrypted password and session
 - [ ] Balance and transaction history
+- [ ] Manual reservation and cancellation
 - [ ] Cron-based deadline reminders
 - [ ] Automatic reservation and cancellation
 - [ ] End-to-end tests with recorded fixtures
@@ -194,7 +198,7 @@ Released under the [MIT License](LICENSE). © 2026 Matin Bodaghi.
 
 **AUT-food-bot** یک ربات تلگرام متن‌باز و self-hosted برای سامانه تغذیه دانشگاه صنعتی امیرکبیر ([`food.aut.ac.ir`](https://food.aut.ac.ir)) است.
 
-> **وضعیت: توسعهٔ اولیه (`v0.1.0`).** کلاینت سامانه، پوشش Telegram API، قالب‌بندی فارسی و ابزارهای رمزنگاری پیاده‌سازی شده‌اند. پارسر منو، روتر ربات، زمان‌بندی یادآوری و رزرو خودکار هنوز در حال توسعه هستند.
+> **وضعیت: توسعهٔ اولیه (`v0.1.0`).** کلاینت سامانه، پوشش Telegram API، قالب‌بندی فارسی، ابزارهای رمزنگاری، ورودی Worker، ذخیره‌سازی D1، جریان ورود و پارسر منوی HTML پیاده‌سازی شده‌اند. رزرو دستی، زمان‌بندی یادآوری و رزرو خودکار هنوز در حال توسعه هستند.
 
 ### چه کاری انجام می‌دهد؟
 
@@ -213,10 +217,10 @@ Released under the [MIT License](LICENSE). © 2026 Matin Bodaghi.
 | قالب‌بندی فارسی و تاریخ شمسی | ✅ پیاده‌سازی شده |
 | رمزنگاری AES-GCM | ✅ پیاده‌سازی شده |
 | ابزار کپچر شبکه | ✅ پیاده‌سازی شده |
-| پارسر HTML منو | 🚧 در برنامه |
-| روتر و هندلرهای ربات | 🚧 در برنامه |
-| ورودی Worker و وب‌هوک | 🚧 در برنامه |
-| موجودی و گردش حساب | 🚧 در برنامه |
+| پارسر HTML منو (منو، اعتبار، وضعیت رزرو) | ✅ پیاده‌سازی شده |
+| روتر ربات (`/login`، `/menu`، `/logout`) | ✅ پیاده‌سازی شده |
+| ورودی Worker و وب‌هوک | ✅ پیاده‌سازی شده |
+| موجودی و گردش حساب | 🚧 موجودی در `/menu` نشان داده می‌شود؛ گردش حساب در برنامه |
 | یادآوری با Cron | 🚧 در برنامه |
 | رزرو/لغو خودکار | 🚧 در برنامه |
 

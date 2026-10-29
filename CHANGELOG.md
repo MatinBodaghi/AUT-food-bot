@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unit tests for the formatting helpers.
 - MIT license, bilingual README, contribution guide, code of conduct, security
   policy, issue and pull request templates, and CI workflow.
+- Cloudflare Worker entry point with a secret-token-authenticated Telegram webhook.
+- D1 storage (`migrations/0001_init.sql`) for the owner, encrypted AUT password,
+  encrypted session cookie, and login conversation state.
+- `FoodClient.getPersonGroupId()` and the correct restaurant endpoint
+  (`/Reserves/GetRestaurantByPersonGroup`) instead of the credit-transfer list.
+- HTML parser for the reserve page: credit, days, meals, food options, prices,
+  and reservation state, with a redacted fixture and tests.
+- Bot commands `/start`, `/help`, `/login`, `/logout`, and `/menu`, plus the
+  `tools/set-webhook.mjs` helper.
 
 ### Changed
 

@@ -1,4 +1,4 @@
-import { readFileSync, existsSync, writeFileSync } from "node:fs";
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FoodClient } from "../src/food/client.ts";
@@ -40,7 +40,9 @@ async function test() {
   console.log(`✅ ورود با موفقیت انجام شد! (زمان: ${Date.now() - start} میلی‌ثانیه)`);
 
   console.log("\n⏳ ۲. در حال دریافت لیست سلف‌ها و رستوران‌های مجاز کاربر...");
-  const restaurants = await client.getRestaurants();
+  const personGroupId = await client.getPersonGroupId();
+  console.log(`✅ شناسهٔ گروه کاربر: ${personGroupId}`);
+  const restaurants = await client.getRestaurants(personGroupId);
   console.log(`✅ ${restaurants.length} سلف/رستوران مجاز دریافت شد:`);
   restaurants.forEach((r) => {
     console.log(`   [ID: ${r.id}] ${r.name}`);
@@ -48,10 +50,11 @@ async function test() {
 
   console.log("\n⏳ ۳. در حال دریافت جدول رزرو هفته جاری برای سلف اول...");
   const firstRest = restaurants[0]?.id ?? 1;
-  const html = await client.getReservePage(27, firstRest);
+  const html = await client.getReservePage(personGroupId, firstRest);
   console.log(`✅ جدول رزرو هفته با موفقیت دریافت شد! (حجم HTML: ${html.length} بایت)`);
 
   // Save the full HTML for analysis
+  mkdirSync(join(ROOT, "data", "captured"), { recursive: true });
   writeFileSync(join(ROOT, "data", "captured", "full_reserve_page.html"), html, "utf8");
   console.log("💾 متن کامل جدول برای تحلیل در data/captured/full_reserve_page.html ذخیره شد.");
 

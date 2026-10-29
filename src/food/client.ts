@@ -4,6 +4,9 @@ import type { Restaurant } from "./types";
 
 export type { Restaurant };
 
+const BASE = "https://food.aut.ac.ir";
+const TIMEOUT_MS = 25_000;
+
 export class CookieJar {
   private cookies = new Map<string, Map<string, string>>();
 
@@ -80,7 +83,7 @@ export class FoodClient {
       headers.set("Cookie", cookieHeader);
     }
 
-    const resp = await fetch(url, { ...init, headers });
+    const resp = await fetch(url, { ...init, headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
 
     // Extract Set-Cookie headers
     let setCookies: string[] = [];
@@ -166,14 +169,38 @@ export class FoodClient {
   }
 
   /**
-   * Get list of authorized restaurants/selfs for the user
+   * Find the user's `personGroupId` by reading the reserve page.
+   * It is user-specific and never hard-coded (27 and 46 have both been seen).
    */
-  async getRestaurants(): Promise<Restaurant[]> {
-    const resp = await this.fetchWithCookies("https://food.aut.ac.ir/ReserveTransfer/GetRestaurantByPersonId", {
+  async getPersonGroupId(): Promise<number> {
+    const resp = await this.fetchWithCookies(`${BASE}/Reserves`, { method: "GET" });
+    if (!resp.ok) {
+      throw new Error(`Failed to open the reserve page (HTTP ${resp.status})`);
+    }
+
+    const html = await resp.text();
+    const match = /personGroupId\s*[:=]\s*["']?(\d+)/i.exec(html);
+    if (!match?.[1]) {
+      throw new Error("Could not determine personGroupId from /Reserves");
+    }
+    return Number(match[1]);
+  }
+
+  /**
+   * Get the restaurants the user is allowed to reserve at.
+   * This is `/Reserves/GetRestaurantByPersonGroup`, not the credit-transfer list.
+   */
+  async getRestaurants(personGroupId: number): Promise<Restaurant[]> {
+    const body = new URLSearchParams({ personGroupId: String(personGroupId) });
+
+    const resp = await this.fetchWithCookies(`${BASE}/Reserves/GetRestaurantByPersonGroup`, {
       method: "POST",
+      body: body.toString(),
       headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         "X-Requested-With": "XMLHttpRequest",
         Accept: "application/json, text/javascript, */*; q=0.01",
+        Referer: `${BASE}/Reserves`,
       },
     });
 
@@ -182,23 +209,20 @@ export class FoodClient {
     }
 
     const data = (await resp.json()) as { id: number; value: string }[];
-    return data.map((item) => ({
-      id: item.id,
-      name: item.value,
-    }));
+    return data.map((item) => ({ id: item.id, name: item.value }));
   }
 
   /**
    * Get raw HTML of the weekly reservation page for a restaurant
    */
-  async getReservePage(personGroupId = 27, restId = 1): Promise<string> {
+  async getReservePage(personGroupId: number, restId: number): Promise<string> {
     const body = new URLSearchParams({
       personGroupId: String(personGroupId),
       restId: String(restId),
       isKiosk: "false",
     });
 
-    const resp = await this.fetchWithCookies("https://food.aut.ac.ir/Reserves/GetReservePage", {
+    const resp = await this.fetchWithCookies(`${BASE}/Reserves/GetReservePage`, {
       method: "POST",
       body: body.toString(),
       headers: {
@@ -218,14 +242,14 @@ export class FoodClient {
   /**
    * Get next week's reserve page HTML
    */
-  async getNextReservePage(personGroupId = 27, restId = 1): Promise<string> {
+  async getNextReservePage(personGroupId: number, restId: number): Promise<string> {
     const body = new URLSearchParams({
       personGroupId: String(personGroupId),
       restId: String(restId),
       isKiosk: "false",
     });
 
-    const resp = await this.fetchWithCookies("https://food.aut.ac.ir/Reserves/GetNextReservePage", {
+    const resp = await this.fetchWithCookies(`${BASE}/Reserves/GetNextReservePage`, {
       method: "POST",
       body: body.toString(),
       headers: {

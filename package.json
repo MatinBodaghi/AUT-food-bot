@@ -29,6 +29,9 @@
     "deploy": "wrangler deploy",
     "logs": "wrangler tail",
     "types": "wrangler types",
+    "db:migrate": "wrangler d1 migrations apply aut-food-bot --remote",
+    "db:migrate:local": "wrangler d1 migrations apply aut-food-bot --local",
+    "webhook": "node tools/set-webhook.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -37,15 +40,18 @@
     "inspect": "node tools/inspect.mjs"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260702.1",
+    "@cloudflare/workers-types": "^5.20261029.1",
     "@grammyjs/types": "^5.0.0",
     "playwright-core": "^1.64.1",
     "tsx": "^4.23.15",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.156.0"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "node-html-parser": "^9.0.5"
   }
 }

@@ -5,20 +5,42 @@ export interface Restaurant {
   name: string;
 }
 
-export interface Meal {
-  id: number | string;
+export type MealType = "lunch" | "dinner" | "breakfast";
+
+/** One food option inside a meal column of the reserve page. */
+export interface MealOption {
+  /** The encoded checkbox id; the server expects it when reserving. */
+  dataId: string;
   name: string;
-  price?: number;
-  date: string; // YYYY-MM-DD
-  mealType: "lunch" | "dinner" | "breakfast";
-  restaurant?: string;
-  reserved?: boolean;
+  /** Price in rials, if the page shows one. */
+  price: number | null;
+  /** Already reserved before this page load (`data-prechecked`). */
+  reserved: boolean;
+  /** The page allows interacting with this option (no `disabled` attribute). */
+  selectable: boolean;
+  /** Optional food options payload (`data-food-options`). */
+  options: string;
+  dietFood: string;
+}
+
+export interface Meal {
+  type: MealType;
+  options: MealOption[];
 }
 
 export interface DayMenu {
-  date: string;
+  /** Persian weekday name, e.g. "شنبه". */
   dayName: string;
+  /** Jalali date in YYYY/MM/DD, e.g. "1405/08/02". */
+  date: string;
   meals: Meal[];
+}
+
+export interface ReservePage {
+  restaurant: string | null;
+  /** Credit in rials; negative when the account is in debt. */
+  credit: number | null;
+  days: DayMenu[];
 }
 
 export interface UserBalance {

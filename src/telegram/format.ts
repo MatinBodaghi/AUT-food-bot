@@ -35,6 +35,25 @@ export function truncate(text: string, limit = MESSAGE_LIMIT): string {
   return text.length <= limit ? text : `${text.slice(0, limit)}\n…`;
 }
 
+/** Today's Jalali date in YYYY/MM/DD, Tehran time (matches the reserve page). */
+export function todayJalali(date = new Date()): string {
+  const formatter = new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn", {
+    timeZone: "Asia/Tehran",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  const parts = formatter.formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year").replace(/\D/g, "")}/${get("month")}/${get("day")}`;
+}
+
+/** 350000 → "۳۵۰,۰۰۰ ریال"; null-ish stays a dash. */
+export function fmtPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined) return "—";
+  return `${fa(Math.abs(value).toLocaleString("en-US"))} ریال`;
+}
+
 // Keyboards
 export type Button = InlineKeyboardButton;
 
