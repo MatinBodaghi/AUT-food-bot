@@ -44,7 +44,7 @@
     "@grammyjs/types": "^5.0.0",
     "playwright-core": "^1.64.1",
     "tsx": "^4.23.15",
-    "typescript": "^5.7.0",
+    "typescript": "^7.0.2",
     "vitest": "^2.1.0",
     "wrangler": "^4.156.0"
   },
