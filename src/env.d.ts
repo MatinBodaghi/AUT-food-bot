@@ -7,4 +7,8 @@ interface Env {
   WEBHOOK_SECRET: string;
   /** Base64 of 32 random bytes; encrypts the AUT password and session cookie. */
   TOKEN_KEY: string;
+  /** Static assets binding (the Mini App files in public/). */
+  ASSETS: Fetcher;
+  /** Public URL of the Mini App page, e.g. https://<worker>.workers.dev/app.html */
+  APP_URL: string;
 }

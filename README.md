@@ -34,6 +34,8 @@ AUT students must reserve meals before a deadline (currently around 48 hours bef
 | HTML menu parser (menu, credit, reservation state) | ✅ Implemented |
 | Telegram bot router (`/login`, `/menu`, `/logout`) | ✅ Implemented |
 | Cloudflare Worker entry point + webhook | ✅ Implemented |
+| Telegram Mini App (week navigation, food cards, in-app login) | ✅ Implemented |
+| Manual reservation / cancellation (with confirmation) | ✅ Implemented (live test pending) |
 | Balance and transaction history | 🚧 Balance is shown in `/menu`; history planned |
 | Scheduled deadline reminders (Cron Triggers) | 🚧 Planned |
 | Automatic reservation / cancellation | 🚧 Planned |
@@ -221,6 +223,8 @@ Released under the [MIT License](LICENSE). © 2026 Matin Bodaghi.
 | پارسر HTML منو (منو، اعتبار، وضعیت رزرو) | ✅ پیاده‌سازی شده |
 | روتر ربات (`/login`، `/menu`، `/logout`) | ✅ پیاده‌سازی شده |
 | ورودی Worker و وب‌هوک | ✅ پیاده‌سازی شده |
+| اپلیکیشن Mini App (ناوبری هفته، کارت غذا، ورود داخل اپ) | ✅ پیاده‌سازی شده |
+| رزرو/لغو دستی با تأیید | ✅ پیاده‌سازی شده (تست واقعی در انتظار) |
 | موجودی و گردش حساب | 🚧 موجودی در `/menu` نشان داده می‌شود؛ گردش حساب در برنامه |
 | یادآوری با Cron | 🚧 در برنامه |
 | رزرو/لغو خودکار | 🚧 در برنامه |

@@ -229,25 +229,41 @@ export class FoodClient {
     return data.map((item) => ({ id: item.id, name: item.value }));
   }
 
-  /**
-   * Get raw HTML of the weekly reservation page for a restaurant
-   */
-  async getReservePage(personGroupId: number, restId: number): Promise<string> {
+  /** POST to one of the Reserves/* page endpoints with the shared XHR headers. */
+  private postReservePage(
+    path: string,
+    personGroupId: number,
+    restId: number,
+  ): Promise<Response> {
     const body = new URLSearchParams({
       personGroupId: String(personGroupId),
       restId: String(restId),
       isKiosk: "false",
     });
 
-    const resp = await this.fetchWithCookies(`${BASE}/Reserves/GetReservePage`, {
+    return this.fetchWithCookies(`${BASE}${path}`, {
       method: "POST",
       body: body.toString(),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
         "X-Requested-With": "XMLHttpRequest",
-        Referer: "https://food.aut.ac.ir/Reserves",
+        Referer: `${BASE}/Reserves`,
       },
     });
+  }
+
+  /**
+   * Get raw HTML of the weekly reservation page for a restaurant.
+   *
+   * `GetReservePage` is the endpoint used by the initial page load, but it started
+   * answering 500 in late 2026; the tab switcher on /Reserves uses
+   * `GetCurrentReservePage`, so fall back to that one.
+   */
+  async getReservePage(personGroupId: number, restId: number): Promise<string> {
+    let resp = await this.postReservePage("/Reserves/GetReservePage", personGroupId, restId);
+    if (!resp.ok) {
+      resp = await this.postReservePage("/Reserves/GetCurrentReservePage", personGroupId, restId);
+    }
 
     if (!resp.ok) {
       throw new Error(`Failed to get reserve page (HTTP ${resp.status})`);
@@ -260,24 +276,31 @@ export class FoodClient {
    * Get next week's reserve page HTML
    */
   async getNextReservePage(personGroupId: number, restId: number): Promise<string> {
-    const body = new URLSearchParams({
-      personGroupId: String(personGroupId),
-      restId: String(restId),
-      isKiosk: "false",
-    });
-
-    const resp = await this.fetchWithCookies(`${BASE}/Reserves/GetNextReservePage`, {
-      method: "POST",
-      body: body.toString(),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-        Referer: "https://food.aut.ac.ir/Reserves",
-      },
-    });
+    const resp = await this.postReservePage(
+      "/Reserves/GetNextReservePage",
+      personGroupId,
+      restId,
+    );
 
     if (!resp.ok) {
       throw new Error(`Failed to get next reserve page (HTTP ${resp.status})`);
+    }
+
+    return resp.text();
+  }
+
+  /**
+   * Get previous week's reserve page HTML
+   */
+  async getPreReservePage(personGroupId: number, restId: number): Promise<string> {
+    const resp = await this.postReservePage(
+      "/Reserves/GetPreReservePage",
+      personGroupId,
+      restId,
+    );
+
+    if (!resp.ok) {
+      throw new Error(`Failed to get previous reserve page (HTTP ${resp.status})`);
     }
 
     return resp.text();

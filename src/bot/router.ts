@@ -9,14 +9,15 @@ import { buildDataId } from "../food/reserve";
 import type { MealType } from "../food/types";
 import { Store, type PendingAction, type PendingOption } from "../store";
 import { Telegram } from "../telegram/api";
-import { btn, esc, fmtPrice, kb, todayJalali, truncate } from "../telegram/format";
+import { btn, esc, fmtPrice, kb, todayJalali, truncate, webAppBtn } from "../telegram/format";
 
 const WELCOME =
   "🍱 <b>ربات تغذیهٔ امیرکبیر</b>\n\n" +
+  "/app — اپلیکیشن گرافیکی (هفته‌ها، کارت غذا، رزرو)\n" +
   "/menu — منوی سلف‌ها\n" +
   "/reserve — رزرو یا لغو یک وعده\n" +
   "/login — ورود به حساب\n\n" +
-  "برای شروع با /login وارد شو.";
+  "برای شروع با /login وارد شو یا /app را باز کن.";
 
 const MEAL_LABELS: Record<MealType, string> = {
   lunch: "ناهار",
@@ -57,13 +58,14 @@ export async function handleUpdate(env: Env, update: Update): Promise<void> {
   if (!message || !text) return;
 
   if (text.startsWith("/")) {
-    await onCommand(store, tg, chatId, text);
+    await onCommand(env, store, tg, chatId, text);
     return;
   }
   await onText(store, tg, chatId, message.message_id, text);
 }
 
 async function onCommand(
+  env: Env,
   store: Store,
   tg: Telegram,
   chatId: number,
@@ -74,6 +76,8 @@ async function onCommand(
   switch (command) {
     case "/start":
     case "/help":
+      // A stale login prompt would otherwise treat the next message as a password.
+      await store.delete("login_step", "login_username");
       await tg.sendMessage(chatId, WELCOME, { reply_markup: mainMenu() });
       return;
 
@@ -96,6 +100,12 @@ async function onCommand(
 
     case "/menu":
       await showMenu(store, tg, chatId);
+      return;
+
+    case "/app":
+      await tg.sendMessage(chatId, "📱 اپلیکیشن تغذیه:", {
+        reply_markup: kb([[webAppBtn("باز کردن اپلیکیشن", env.APP_URL)]]),
+      });
       return;
 
     case "/reserve":

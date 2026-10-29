@@ -257,6 +257,13 @@ personGroupId=27&restId=1&isKiosk=false
 - `GetNextReservePage` and `GetPreReservePage` take the same body and return the
   next and previous week.
 
+> **Week endpoints are unreliable (verified 2026-10-30).** `GetReservePage` started
+> answering `500`, and the endpoint called "current" returned the same range as
+> "previous" while "next" held the week containing today. `GetCurrentReservePage`
+> exists and works. Do not trust the endpoint name to decide which week you got:
+> read the dates in the payload, sort the unique ranges, and locate today. The
+> bot does this in `src/api.ts` (`collectWeekPages`).
+
 #### `GET /UserHome/Index2`
 
 The authenticated dashboard (HTML). Useful as a cheap "is the session alive?"

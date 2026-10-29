@@ -56,6 +56,7 @@ if (!set.ok) fail(`setWebhook ناموفق: ${set.description}`);
 
 const commands = await api("setMyCommands", {
   commands: [
+    { command: "app", description: "باز کردن اپلیکیشن گرافیکی" },
     { command: "menu", description: "منوی امروز همهٔ سلف‌ها" },
     { command: "reserve", description: "رزرو یا لغو یک وعده" },
     { command: "login", description: "ورود به حساب تغذیه" },
@@ -65,4 +66,12 @@ const commands = await api("setMyCommands", {
 });
 if (!commands.ok) console.warn(`⚠️ setMyCommands: ${commands.description}`);
 
+// The button next to the message box opens the Mini App.
+const appUrl = `${workerUrl.replace(/\/$/, "")}/app.html`;
+const menuButton = await api("setChatMenuButton", {
+  menu_button: { type: "web_app", text: "منوی غذا", web_app: { url: appUrl } },
+});
+if (!menuButton.ok) console.warn(`⚠️ setChatMenuButton: ${menuButton.description}`);
+
 console.log(`✅ webhook روی ${webhookUrl} ثبت شد.`);
+console.log(`📱 Mini App: ${appUrl}`);

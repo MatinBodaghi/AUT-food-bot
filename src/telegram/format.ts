@@ -67,6 +67,12 @@ export const urlBtn = (text: string, url: string): Button => ({
   url,
 });
 
+/** Opens a Telegram Mini App from an inline button. */
+export const webAppBtn = (text: string, url: string): Button => ({
+  text: text.slice(0, 60),
+  web_app: { url },
+});
+
 export const kb = (rows: (Button[] | null | undefined | false)[]): InlineKeyboardMarkup => ({
   inline_keyboard: rows.filter((r): r is Button[] => Array.isArray(r) && r.length > 0),
 });

@@ -6,6 +6,19 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
 
+  // The Mini App (public/app.html) is served by this Worker. API routes live under
+  // /api/* and the Telegram webhook under /telegram, so they never clash with a
+  // static file.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  "vars": {
+    // Change this when deploying your own copy (see README).
+    "APP_URL": "https://aut-food-bot.matinbodaghi07.workers.dev/app.html"
+  },
+
   // Values live only in Cloudflare (`wrangler secret put NAME`), never in this repo.
   //   BOT_TOKEN       Telegram bot token from @BotFather
   //   WEBHOOK_SECRET  random string Telegram echoes in X-Telegram-Bot-Api-Secret-Token
