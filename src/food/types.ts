@@ -1,5 +1,10 @@
 // Types for food.aut.ac.ir / samad.aut.ac.ir
 
+export interface Restaurant {
+  id: number;
+  name: string;
+}
+
 export interface Meal {
   id: number | string;
   name: string;

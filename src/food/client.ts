@@ -1,9 +1,8 @@
 // Client for food.aut.ac.ir with CAS Single Sign-On (accounts.aut.ac.ir)
 
-export interface Restaurant {
-  id: number;
-  name: string;
-}
+import type { Restaurant } from "./types";
+
+export type { Restaurant };
 
 export class CookieJar {
   private cookies = new Map<string, Map<string, string>>();
