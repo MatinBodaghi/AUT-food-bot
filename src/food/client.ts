@@ -282,4 +282,38 @@ export class FoodClient {
 
     return resp.text();
   }
+
+  /**
+   * Submit one or more `DataId` changes to /Reserves/Index.
+   * Callers must re-read the reserve page afterwards to verify the outcome.
+   */
+  async submitReserve(
+    personGroupId: number,
+    restId: number,
+    dataIds: string[],
+    firstEWalletId = 1,
+  ): Promise<string> {
+    const body = new URLSearchParams({
+      type: "Index",
+      personGroupId: String(personGroupId),
+      restId: String(restId),
+      firstEWalletId: String(firstEWalletId),
+    });
+    for (const dataId of dataIds) body.append("DataId[]", dataId);
+
+    const resp = await this.fetchWithCookies(`${BASE}/Reserves/Index`, {
+      method: "POST",
+      body: body.toString(),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "X-Requested-With": "XMLHttpRequest",
+        Referer: `${BASE}/Reserves`,
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(`Reserve request failed (HTTP ${resp.status})`);
+    }
+    return resp.text();
+  }
 }

@@ -6,8 +6,8 @@
 > documented here only so that students can build their own tools.
 >
 > **Verified against network captures:** 2026-10-23 · **Last updated:** 2026-10-30
-> **Status:** read endpoints fully mapped; write endpoints partially mapped
-> (see [`DataId`](#the-dataid-payload), the main open question).
+> **Status:** read endpoints fully mapped; reserve/cancel encoding decoded;
+> reservation-transfer and credit mutations still open.
 
 This is the canonical API reference for the project. If you only need the
 architecture and bot flow, read [`architecture.md`](architecture.md) instead.
@@ -56,7 +56,7 @@ in the `.AspNet.ApplicationCookie`.
 | Your restaurant list | `POST /Reserves/GetRestaurantByPersonGroup` | ✅ verified |
 | Weekly menu + credit | `POST /Reserves/GetReservePage` (HTML) | ✅ verified |
 | Next/previous week | `POST /Reserves/GetNextReservePage`, `GetPreReservePage` | ✅ verified |
-| Reserve or cancel a meal | `POST /Reserves/Index` with `DataId[]` | ⚠️ shape known, encoding partial |
+| Reserve or cancel a meal | `POST /Reserves/Index` with `DataId[]` | ✅ encoding decoded (2026-10-30) |
 | Transaction history | `POST /UserHome/SearchTransactions` (HTML) | ✅ verified (table) |
 | Increase credit | `GET /Eshop/IncreaseCredit` | ✅ page, payment is external |
 | Transfer credit | `GET /Eshop/TransferCredit` | ✅ page |
@@ -454,56 +454,74 @@ Read these from the page instead of hard-coding them.
 
 ## The `DataId` payload
 
-This is the only blocking unknown for automatic reservation.
+Decoded from the page's own `btnRegClass` click handler (verified 2026-10-30).
+
+### Algorithm
+
+The page builds one string per changed checkbox:
+
+```js
+var dataString = $(this).attr("id").split("---")[0]        // checkbox id without the UUID
+  .concat($(this).is(":checked") ? "t" : "f")              // t = checked, f = unchecked
+  .concat("fco").concat($(this).attr("data-count"))        // new count
+  .concat("pco").concat($(this).attr("data-precount"))     // count before the change
+  .concat("options|").concat(foodOptionDetails)            // "<optionId>---<price>;" pairs
+  .concat("|diet:").concat(isDietSelected ? "1" : "0");
+```
+
+In other words:
+
+```text
+<base-id> + ("t"|"f") + "fco" + <count> + "pco" + <pre-count> + "options|" + <details> + "|diet:" + ("0"|"1")
+```
+
+Where `<base-id>` is the checkbox `id` with everything from `---` on removed
+(so `<uuid>` is dropped).
+
+| Part | Meaning |
+| --- | --- |
+| `t` / `f` | Checkbox state **after** the action: `t` = reserve, `f` = cancel |
+| `fco<count>` | New count. A single toggle sets it to `1` (`chechBoxChanged` writes `data-count = 1` when no count dropdown exists) |
+| `pco<pre-count>` | Count **before** the change, i.e. `data-precount` from the page (`1` for an already reserved meal, `0` otherwise) |
+| `options\|<details>` | `"<optionId>---<price>;"` for every changed food option; empty for a simple meal |
+| `\|diet:<0\|1>` | `1` when a diet food is selected in `#dietTypeSelect--<...>` |
 
 ### Observed examples
 
-Reserve (from a real capture):
+Reserve (checkbox goes from unchecked to checked: `t`, new count 1, old count 0):
 
 ```text
-DataId[]=rr1516575fp1dd2026_10_28ppp00-00dt2026_10_28ppp00-00me5dm5fo199ftf2026_09_23ppp10-00ftt2026_09_23ppp14-59gff2026_10_28ppp10-00gft2026_10_28ppp14-59rest1ffco1pco1options||diet:0
+DataId[]=rr1516575fp1dd2026_10_28ppp00-00dt2026_10_28ppp00-00me5dm5fo199ftf2026_09_23ppp10-00ftt2026_09_23ppp14-59gff2026_10_28ppp10-00gft2026_10_28ppp14-59rest1tfco1pco0options||diet:0
 &type=Index&personGroupId=27&restId=1&firstEWalletId=1
 ```
 
-Cancel (same account, same meal):
+Cancel (checkbox goes from checked to unchecked: `f`, new count 1, old count 1):
 
 ```text
-DataId[]=rr0fp1dd2026_10_28ppp00-00dt2026_10_28ppp00-00me5dm5fo199ftf2026_09_23ppp10-00ftt2026_09_23ppp14-59gff2026_09_23ppp10-00gft2026_09_23ppp14-59rest1tfco1pco0options||diet:0
+DataId[]=rr0fp1dd2026_10_28ppp00-00dt2026_10_28ppp00-00me5dm5fo199ftf2026_09_23ppp10-00ftt2026_09_23ppp14-59gff2026_09_23ppp10-00gft2026_09_23ppp14-59rest1ffco1pco1options||diet:0
 &type=Index&personGroupId=27&restId=1&firstEWalletId=1
 ```
 
-### What is known
+> Earlier versions of this document had these two labels swapped. The suffix
+> determines the action: `t…pco0` reserves, `f…pco1` cancels.
 
-- The value is derived from the checkbox `id`, which ends with `rest<id>---<uuid>`.
-- The submitted value **drops the `---<uuid>` suffix** and replaces it with a
-  state suffix such as `ffco1pco1` or `tfco1pco0`.
-- Segments look like `dd<date>`, `dt<date>`, `me<meal-id>`, `ftf<date>`,
-  `ftt<date>`, `gff<date>`, `gft<date>`, `rest<id>` — i.e. dates, times, and IDs
-  packed with separators (`ppp`, `pco`, …).
-- `options||diet:0` closes the value; food options would presumably appear before
-  `||`.
-- `firstEWalletId=1` is sent as a separate form field, always `1` in captures.
+### Notes and remaining unknowns
 
-### What is not known
+- `firstEWalletId` is a **separate form field** (`#EWalletId` on the outer page,
+  not in the reserve fragment); every capture used `1`.
+- `foodOptionDetails` only includes options whose checkbox was changed, as
+  `<id-after-"--" >---<price>;`.
+- Not yet exercised: multi-count meals, diet selections, and options. The
+  encoding above is taken from the site's own code, so it should hold; verify
+  with a capture when you touch those features.
+- The `<uuid>` after `---` changes on every page render. Always build `DataId`
+  from a **freshly fetched** page, never from a cached one.
 
-- The meaning of `ffco1pco1` vs `tfco1pco0` (checked/unchecked? reserve/cancel?).
-- Why the cancel example starts with `rr0f…` while the reserve one has
-  `rr1516575f…`.
-- How the payload changes with food options or diet meals.
-- Whether the server validates `DataId` against the session or treats it as opaque.
-- Whether `firstEWalletId` depends on the user.
+### Implementation
 
-### How to finish this (recommended)
-
-1. **Read the site's own JavaScript.** The value is assembled client-side before
-   the AJAX call. On `/Reserves`, find the function that serializes
-   `.reserveFoodCheckBox` (search the bundles for `pco`, `options||diet`, or
-   `DataId`). This is far faster than guessing.
-2. **Capture variants.** Reserve and cancel the same meal, with/without options,
-   one and several selections, different days, and diff the values.
-3. **Replay in a test account** and verify the result by re-reading
-   `GetReservePage`; never assume success from the mutation response alone.
-4. Update this section (and preferably add a redacted example per case).
+`src/food/reserve.ts` exposes `buildDataId(option, "reserve" | "cancel")`, and
+`FoodClient.submitReserve` posts the result. Always re-read `GetReservePage`
+afterwards: a `200` from `/Reserves/Index` does not by itself prove the change.
 
 ---
 
@@ -597,3 +615,4 @@ writes a `summary.json`. Then:
 | 2026-10-23 | Initial notes from browser captures: CAS flow, restaurant list, reserve page, `Reserves/Index`, transactions |
 | 2026-10-30 | Restructured into a reference; added endpoint status table, phone/desktop view parsing notes, `DataId` analysis, error handling, and contribution guidance |
 | 2026-10-30 | Live verification: CAS login, `personGroupId` comes from `<select id="PersonGroup">`, restaurant list returns 9 entries for group 27, parser confirmed against a fresh 67 KB reserve page (`credit = -550000`, 7 days) |
+| 2026-10-30 | `DataId` fully decoded from the page's `btnRegClass` handler (`t/f` + `fco`/`pco` + options + diet); corrected the reserve/cancel labels of the earlier captures |

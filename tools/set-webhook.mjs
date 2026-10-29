@@ -56,8 +56,9 @@ if (!set.ok) fail(`setWebhook ناموفق: ${set.description}`);
 
 const commands = await api("setMyCommands", {
   commands: [
-    { command: "login", description: "ورود به حساب تغذیه" },
     { command: "menu", description: "منوی امروز همهٔ سلف‌ها" },
+    { command: "reserve", description: "رزرو یا لغو یک وعده" },
+    { command: "login", description: "ورود به حساب تغذیه" },
     { command: "logout", description: "خروج و پاک کردن اطلاعات" },
     { command: "help", description: "راهنما" },
   ],

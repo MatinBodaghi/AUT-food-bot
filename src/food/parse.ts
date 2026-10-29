@@ -64,6 +64,8 @@ function parseOption(block: HTMLElement): MealOption | null {
     selectable: !input.hasAttribute("disabled"),
     options: input.getAttribute("data-food-options") ?? "",
     dietFood: input.getAttribute("data-diet-food") ?? "",
+    preCount: Number(input.getAttribute("data-precount") ?? 0) || 0,
+    count: Number(input.getAttribute("data-count") ?? 0) || 0,
   };
 }
 

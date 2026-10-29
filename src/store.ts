@@ -9,6 +9,32 @@ export interface AutCredentials {
   password: string;
 }
 
+export type ReserveAction = "reserve" | "cancel";
+
+export interface PendingOption {
+  dataId: string;
+  name: string;
+  price: number | null;
+  action: ReserveAction;
+}
+
+/** Options shown for one restaurant, referenced by `o:<index>` callbacks. */
+export interface PendingOptions {
+  restId: number;
+  restaurantName: string;
+  date: string;
+  options: PendingOption[];
+}
+
+/** The option the user confirmed, awaiting the final `c` callback. */
+export interface PendingAction {
+  restId: number;
+  date: string;
+  name: string;
+  action: ReserveAction;
+  dataId: string;
+}
+
 /** Typed keys of the `kv` table. Add new keys here; values are stored as JSON. */
 export interface KvValues {
   /** Telegram user id allowed to use the bot (first /start claims it). */
@@ -25,6 +51,10 @@ export interface KvValues {
   login_username: string;
   /** unix time of the last successful AUT login. */
   aut_logged_in_at: number;
+  /** Options currently offered for one restaurant (for `o:<index>` callbacks). */
+  pending_options: PendingOptions;
+  /** Option waiting for the final confirmation. */
+  pending_action: PendingAction;
 }
 
 const now = () => Math.floor(Date.now() / 1000);

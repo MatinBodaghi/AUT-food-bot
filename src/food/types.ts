@@ -21,6 +21,10 @@ export interface MealOption {
   /** Optional food options payload (`data-food-options`). */
   options: string;
   dietFood: string;
+  /** `data-precount`: how many were reserved before this page load. */
+  preCount: number;
+  /** `data-count`: the count the page currently submits (0 until toggled). */
+  count: number;
 }
 
 export interface Meal {
