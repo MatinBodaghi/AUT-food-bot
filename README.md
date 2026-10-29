@@ -74,7 +74,8 @@ Worker webhook ──► bot router ──► AUT client ──► food.aut.ac.i
 Cron Trigger ──► deadline reminders and automatic reservations
 ```
 
-More details: [`docs/architecture.md`](docs/architecture.md) and [`docs/aut-food-api.md`](docs/aut-food-api.md).
+More details: [`docs/architecture.md`](docs/architecture.md) and the reverse-engineered
+[`docs/aut-food-api.md`](docs/aut-food-api.md) (endpoints, HTML structure, `DataId` analysis).
 
 ## Tech stack
 
