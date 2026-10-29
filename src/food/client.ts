@@ -1,5 +1,7 @@
 // Client for food.aut.ac.ir with CAS Single Sign-On (accounts.aut.ac.ir)
 
+import { parse } from "node-html-parser";
+
 import type { Restaurant } from "./types";
 
 export type { Restaurant };
@@ -169,21 +171,36 @@ export class FoodClient {
   }
 
   /**
-   * Find the user's `personGroupId` by reading the reserve page.
-   * It is user-specific and never hard-coded (27 and 46 have both been seen).
+   * Find the user's `personGroupId`.
+   *
+   * The `/Reserves` page renders a <select id="PersonGroup"> with every group the
+   * user belongs to (seen: 27 "دانشجویان روزانه", 46 "غذای مکمل"). The server
+   * marks the active one with `selected`; when it does not, the browser picks the
+   * first option, so we do the same.
    */
   async getPersonGroupId(): Promise<number> {
-    const resp = await this.fetchWithCookies(`${BASE}/Reserves`, { method: "GET" });
-    if (!resp.ok) {
-      throw new Error(`Failed to open the reserve page (HTTP ${resp.status})`);
-    }
+    const html = await this.getPage("/Reserves");
+    const select = parse(html).querySelector("#PersonGroup");
+    const options = select?.querySelectorAll("option") ?? [];
+    const chosen = options.find((option) => option.hasAttribute("selected")) ?? options[0];
+    const value = chosen?.getAttribute("value");
 
-    const html = await resp.text();
-    const match = /personGroupId\s*[:=]\s*["']?(\d+)/i.exec(html);
-    if (!match?.[1]) {
-      throw new Error("Could not determine personGroupId from /Reserves");
+    if (!value) {
+      throw new Error("Could not determine personGroupId from the PersonGroup select");
     }
-    return Number(match[1]);
+    return Number(value);
+  }
+
+  /** Fetch an authenticated HTML page (used for pages without a JSON endpoint). */
+  async getPage(path: string): Promise<string> {
+    const resp = await this.fetchWithCookies(`${BASE}${path}`, {
+      method: "GET",
+      headers: { Referer: `${BASE}/UserHome/Index2` },
+    });
+    if (!resp.ok) {
+      throw new Error(`Failed to open ${path} (HTTP ${resp.status})`);
+    }
+    return resp.text();
   }
 
   /**

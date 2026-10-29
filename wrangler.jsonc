@@ -15,8 +15,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      // No database_id: wrangler finds (or creates) the database by name in your account.
       "database_name": "aut-food-bot",
+      "database_id": "d9a25a8f-bcd7-4dc9-9464-fb17fd27f8b0",
       "migrations_dir": "migrations"
     }
   ],

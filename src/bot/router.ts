@@ -193,17 +193,44 @@ async function showMenu(store: Store, tg: Telegram, chatId: number): Promise<voi
 
     const restaurants = await client.getRestaurants(personGroupId);
     const today = todayJalali();
-    const lines: string[] = [];
-    let found = 0;
+    const pages: { name: string; page: ReturnType<typeof parseReservePage> }[] = [];
 
     for (const restaurant of restaurants) {
       const html = await client.getReservePage(personGroupId, restaurant.id);
-      const page = parseReservePage(html);
-      const day = page.days.find((candidate) => candidate.date === today);
+      pages.push({ name: restaurant.name, page: parseReservePage(html) });
+    }
+
+    const dates = [
+      ...new Set(
+        pages.flatMap(({ page }) =>
+          page.days.filter((day) => day.meals.length > 0).map((day) => day.date),
+        ),
+      ),
+    ].sort();
+
+    // On weekends (or after the last reservable day) today has no food, so show the
+    // nearest day that does instead of an empty message.
+    const target = dates.includes(today)
+      ? today
+      : (dates.find((date) => date > today) ?? dates[dates.length - 1]);
+
+    if (!target) {
+      await tg.sendMessage(chatId, `برای این هفته (${esc(today)}) غذایی در سلف‌ها پیدا نشد.`, {
+        reply_markup: mainMenu(),
+      });
+      return;
+    }
+
+    const credit = pages[0]?.page.credit ?? null;
+    const lines: string[] = [];
+    let found = 0;
+
+    for (const { name, page } of pages) {
+      const day = page.days.find((candidate) => candidate.date === target);
       if (!day || day.meals.length === 0) continue;
 
       found++;
-      lines.push(`\n🍽 <b>${esc(restaurant.name)}</b>`);
+      lines.push(`\n🍽 <b>${esc(name)}</b>`);
       for (const meal of day.meals) {
         lines.push(`<i>${MEAL_LABELS[meal.type] ?? meal.type}</i>`);
         for (const option of meal.options) {
@@ -215,15 +242,15 @@ async function showMenu(store: Store, tg: Telegram, chatId: number): Promise<voi
     }
 
     if (found === 0) {
-      await tg.sendMessage(
-        chatId,
-        `برای امروز (${esc(today)}) غذایی در سلف‌ها پیدا نشد.`,
-        { reply_markup: mainMenu() },
-      );
+      await tg.sendMessage(chatId, `برای ${esc(target)} غذایی پیدا نشد.`, {
+        reply_markup: mainMenu(),
+      });
       return;
     }
 
-    const text = `🗓 منوی امروز — ${esc(today)}\n${lines.join("\n")}`;
+    const heading = target === today ? "منوی امروز" : "نزدیک‌ترین روز با غذا";
+    const creditLine = credit !== null ? `\n💳 اعتبار: ${fmtPrice(credit)}` : "";
+    const text = `🗓 ${heading} — ${esc(target)}${creditLine}\n${lines.join("\n")}`;
     await tg.sendMessage(chatId, truncate(text), { reply_markup: mainMenu() });
     await store.setSession(client.jar.serialize());
   } catch (error) {

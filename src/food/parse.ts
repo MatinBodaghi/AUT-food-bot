@@ -143,7 +143,9 @@ function parseDesktopView(view: HTMLElement): DayMenu[] {
 export function parseReservePage(html: string): ReservePage {
   const root = parse(html);
   const credit = parseNumber(root.querySelector("#reserveCredit")?.text);
-  const restaurant = root.querySelector(".restTXT span")?.text.trim() ?? null;
+  // The header is rendered as "رستوران :  <name>", sometimes with stray spaces.
+  const rawRestaurant = root.querySelector(".restTXT span")?.text.trim() ?? "";
+  const restaurant = rawRestaurant.replace(/^رستوران\s*:\s*/, "").trim() || null;
 
   const phone = root.querySelector(".PhoneView");
   const desktop = root.querySelector(".DesktopView");

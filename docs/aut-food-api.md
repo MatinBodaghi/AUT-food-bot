@@ -52,6 +52,7 @@ in the `.AspNet.ApplicationCookie`.
 | What you want | How to get it | Status |
 | --- | --- | --- |
 | Log in | CAS flow → `.AspNet.ApplicationCookie` | ✅ verified |
+| Your `personGroupId` | `<select id="PersonGroup">` on `/Reserves` | ✅ verified (2026-10-30) |
 | Your restaurant list | `POST /Reserves/GetRestaurantByPersonGroup` | ✅ verified |
 | Weekly menu + credit | `POST /Reserves/GetReservePage` (HTML) | ✅ verified |
 | Next/previous week | `POST /Reserves/GetNextReservePage`, `GetPreReservePage` | ✅ verified |
@@ -319,19 +320,32 @@ re-read `GetReservePage` afterwards to verify the new state.
 
 ## Discovering `personGroupId`
 
-Every `Reserves/*` call needs it, but it is not a constant:
+Every `Reserves/*` call needs it, and it is **not** a constant (observed: `27` and
+`46`). It is served on the `/Reserves` page as a regular `<select>`:
 
-- observed values: `27`, `46`;
-- it is not a query parameter the user chooses;
-- the source is **not confirmed** yet.
+```html
+<select class="form-control" id="PersonGroup" name="PersonGroup">
+  <option value="27">دانشجویان روزانه</option>
+  <option value="46">غذای مکمل</option>
+</select>
+```
 
-Working hypothesis (implemented in `src/food/client.ts`): the `/Reserves` page
-embeds it in an inline script or data attribute, so scraping
-`/Reserves` for `personGroupId\s*[:=]\s*"?(\d+)` may find it. If that fails,
-check `/UserHome/Index2` and the JS bundles loaded by `/Reserves`.
+Rules that work in practice (verified live on 2026-10-30):
 
-If you confirm the real source, please update this section — it is the most
-useful missing piece for new implementations.
+1. Parse `<select id="PersonGroup">`.
+2. If one `<option>` has the `selected` attribute, use its `value`.
+3. Otherwise the browser defaults to the **first** option, so use the first one.
+4. The page's own JavaScript does the same: `$("#PersonGroup").val()` is sent as
+   `personGroupId` to `GetRestaurantByPersonGroup`, `Get(Current|Next|Pre)ReservePage`.
+
+A user can belong to several groups (`27` daily food, `46` supplementary food); in
+that case the page is expected to mark the active one with `selected`. Do not
+hard-code either value.
+
+> The same page's JavaScript references a `GetCurrentReservePage` endpoint in
+> addition to `GetReservePage`. Both have been observed working in different code
+> paths; prefer `GetReservePage` (used by the initial page load in our captures)
+> but fall back to `GetCurrentReservePage` if it ever returns an empty fragment.
 
 ---
 
@@ -582,3 +596,4 @@ writes a `summary.json`. Then:
 | --- | --- |
 | 2026-10-23 | Initial notes from browser captures: CAS flow, restaurant list, reserve page, `Reserves/Index`, transactions |
 | 2026-10-30 | Restructured into a reference; added endpoint status table, phone/desktop view parsing notes, `DataId` analysis, error handling, and contribution guidance |
+| 2026-10-30 | Live verification: CAS login, `personGroupId` comes from `<select id="PersonGroup">`, restaurant list returns 9 entries for group 27, parser confirmed against a fresh 67 KB reserve page (`credit = -550000`, 7 days) |
